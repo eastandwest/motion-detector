@@ -1,0 +1,8 @@
+plugins:
+  - name: facedetection
+    url:  http://localhost:10000/detect
+  - name: bodydetection
+    url:  http://localhost:10001/detect
+generator: http://10.49.52.177:7000/image/current
+publisher: http://localhost:7001/
+interval: 1000 # 1sec
