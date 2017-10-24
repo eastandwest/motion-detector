@@ -1,21 +1,25 @@
-# image analyzer
+# motion detector
 
-image analyzer (face detection etc.) for iFogCloud project.
+motion detector (face detection etc.) for iFogCloud project.
 
-## opencv
+## overview
+
+This will get jpeg image from ``media-stream-processor`` via http://SOMEWHERE:7000/image/current. Then make a motion detection process using OpenCV in 10fps.
+
+When motion is detected, the result will be published to mqtt broaker.
+
+To be implemented::
+
+It will poll detected image with motion detected. When it exists, system will make some detection process via OpenCV and other platforms.
+Those detection result will be stored to InfluxDB, munin or AmazonS3.
+
+## pre-required packages
+
+* opencv
 
 ```bash
 sudo apt-get -y install libopencv-dev yasm
 ```
-
-## default analyze servers (opencv)
-
-* facedetection
-  - port : 10000
-  - url  : http://localhost:10000/detect
-* bodydetection
-  - port : 10001
-  - url  : http://localhost:10001/detect
 
 ## In and Out
 
@@ -23,27 +27,23 @@ sudo apt-get -y install libopencv-dev yasm
 
 - get jpeg image data from image generator (http://10.49.52.177:7000/image/current)
 
-* Output
+* Output (if configured)
 
-- POST detected data as json format in body with base64 image to publisher
-  - publisher_url: http://localhost:7001/
+- mqtt
+- influxdb
+- minio
 
-- Format
+* format
 
-```
-@property {string} base64img
-@property {Object} detected
-```
+T.B.W
 
-example
+# scripts
 
-```
-{
-  base64img: <BASE64_ENCODED_IMAGE>,
-  detected: {
-    bodydetection: [{"x":316,"y":243,"width":43,"height":85}],
-    facedetection: [{"x":135,"y":246,"width":200,"height":200}]
-  }
-}
-```
-
+"test": "jest",
+"test:watch": "jest --watch",
+"flow": "flow",
+"flow:watch": "flow-watch",
+"build": "babel src/ -d compiled/",
+"prepublish": "yarn run build",
+"start": "babel-watch -w src src/main.js",
+"create:docs": "bin/createAPIref.sh"
