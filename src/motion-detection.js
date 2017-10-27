@@ -50,11 +50,11 @@ class MotionDetection {
    *
    * @params {Buffer} jpg - jpg image
    * @method MotionDetection#detect
-   * @returns {Promise<{img: Buffer, score: number, contours: Array<{x: number, y: number, width: number, height:number>|null}>}
+   * @returns {Promise<{img: Buffer, score: number, contours: Array<{x: number, y: number, width: number, height:number>|null}>, box: {x: number, y: number, width: number, height: number}>}
    *
    * @examples
    * md.detect(jpg).then(obj => {
-   *   // #=> {jpg: [jpg data], score: 12.4, contours: [{x: 12, y: 15, width: 45, height: 67}, ...] }
+   *   // #=> {jpg: [jpg data], score: 12.4, contours: [{x: 12, y: 15, width: 45, height: 67}, ...], box: {x: 10, y: 10, width: 20, height: 120} }
    * })
    */
   detect(jpg: Buffer):Promise<{img: Buffer, score: number, contours: Array<{x: number, y: number, width: number, height:number}>}> {
@@ -63,7 +63,7 @@ class MotionDetection {
         if(err) {
           reject(err)
         } else {
-          let score = 0, contours = []
+          let score = 0, contours = [], box = {}
 
           // pre-processing
           // grayscale then blur to eliminate noise
@@ -79,13 +79,31 @@ class MotionDetection {
 
             score = this._calcScore(th)
             contours = this._getContoursBoundaries(th)
+            box = this._calcBox(contours)
           }
           this.prev = mat
 
-          resolv({ img: jpg, score, contours})
+          resolv({ img: jpg, score, contours, box})
         }
       })
     })
+  }
+
+  /**
+   * calucrate motion detection box
+   * @private
+   */
+  _calcBox(contours: Array<Object>): Object {
+    let x0 = -1, y0 = -1, x1 = -1, y1 = -1
+
+    contours.forEach( c => {
+      x0 = (x0 === -1 || c.x < x0) ? c.x : x0
+      y0 = (y0 === -1 || c.y < y0) ? c.y : y0
+      x1 = (x1 === -1 || x1 < (c.x + c.width)) ? c.x + c.width : x1
+      y1 = (y1 === -1 || y1 < (c.y + c.height)) ? c.y + c.height : y1
+    })
+
+    return {x : x0, y: y0, width: (x1 - x0), height: (y1 - y0)}
   }
 
   /**

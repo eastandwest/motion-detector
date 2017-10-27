@@ -129,8 +129,10 @@ class Detector {
     return new Promise( (resolve, reject) => {
       this.motionDetection.detect(img)
         .then( res => {
+          const _res = Object.assign({}, {score: res.score, box: res.box})
+          console.log(_res)
           const now = Date.now()
-          resolve(res)
+          resolve(_res)
         })
         .catch( err => reject(err) )
     })
