@@ -1,7 +1,7 @@
 {
-  "name": "image-analyzer",
-  "version": "0.0.4",
-  "description": "image analyzer (face detection etc.) for iFogCloud Project",
+  "name": "motion-detector",
+  "version": "0.0.1",
+  "description": "Motion detector for iFogCloud Project",
   "main": "compiled/main.js",
   "scripts": {
     "test": "jest",
@@ -31,8 +31,8 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
-    "jpeg-turbo": "^0.4.0",
     "log4js": "^1.1.1",
+    "mqtt": "^2.13.1",
     "node-fetch": "^1.7.1",
     "node-yaml": "^3.1.0",
     "opencv": "^6.0.0",

@@ -1,10 +1,8 @@
-import log4js from 'log4js'
 import yaml   from 'node-yaml'
+import log4js from 'log4js'
 
-import ImageAnalyzer from './image-analyzer'
-import OpenCVAnalyzer from './opencv-analyzer'
+import Detector from './detector'
 
-log4js.level = 'debug'
 const logger = log4js.getLogger()
 
 
@@ -13,26 +11,22 @@ const logger = log4js.getLogger()
 const CONFIGFILE = __dirname + '/../conf/config.yaml'
 const conf = yaml.readSync(CONFIGFILE)
 
+const srcimg_url = process.env.SRCIMG_URL || conf.srcimg.url
+const mqtt_host = process.env.MQTT_HOST || conf.mqtt.host
+const mqtt_port = process.env.MQTT_PORT || conf.mqtt.port
+const mqtt_topic = process.env.TOPIC || conf.mqtt.topic
+const polling_interval = process.env.POLLING_INTERVAL || conf.polling.interval
+
+const mqtt_url = `mqtt://${mqtt_host}:${mqtt_port}`
+
 //////////////////////////////////////////////////////
 // start analyzer
 //
-const faceAnalyzer = new OpenCVAnalyzer()
-const fullbodyAnalyzer = new OpenCVAnalyzer()
+const detector = new Detector({srcimg_url, mqtt_url, mqtt_topic, polling_interval})
 
-const imageAnalyzer = new ImageAnalyzer()
-
-faceAnalyzer.startAnalyzer(10000, "FACE_CASCADE")
-  .then(() => fullbodyAnalyzer.startAnalyzer(10001, "FULLBODY_CASCADE"))
-  .then(() => imageAnalyzer.start(
-    conf.plugins,
-    conf.generator,
-    conf.publisher,
-    conf.interval
-  ))
-  .then(() => logger.info('image analyzer started'))
+detector.start()
+  .then(() => logger.info('Motion Detector started'))
   .catch(err => {
     console.warn(err.message)
     process.exit()
   })
-
-

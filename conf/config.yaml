@@ -1,8 +1,8 @@
-plugins:
-  - name: facedetection
-    url:  http://localhost:10000/detect
-  - name: bodydetection
-    url:  http://localhost:10001/detect
-generator: http://10.49.52.177:7000/image/current
-publisher: http://localhost:7001/
-interval: 1000 # 1sec
+srcimg:
+  url: http://localhost:7000/image/current # will be overrided by process.env.SRCIMG_URL
+mqtt:
+  host: localhost  # will be overrided by process.env.MQTT_HOST
+  port: 1883 # will be process.env.MQTT_PORT
+  topic: motiondetection # will be process.env.MQTT_TOPIC
+polling:
+  interval: 100 # will be .... process.env.POLLING_INTERVAL

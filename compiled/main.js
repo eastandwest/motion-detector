@@ -1,24 +1,19 @@
 'use strict';
 
-var _log4js = require('log4js');
-
-var _log4js2 = _interopRequireDefault(_log4js);
-
 var _nodeYaml = require('node-yaml');
 
 var _nodeYaml2 = _interopRequireDefault(_nodeYaml);
 
-var _imageAnalyzer = require('./image-analyzer');
+var _log4js = require('log4js');
 
-var _imageAnalyzer2 = _interopRequireDefault(_imageAnalyzer);
+var _log4js2 = _interopRequireDefault(_log4js);
 
-var _opencvAnalyzer = require('./opencv-analyzer');
+var _detector = require('./detector');
 
-var _opencvAnalyzer2 = _interopRequireDefault(_opencvAnalyzer);
+var _detector2 = _interopRequireDefault(_detector);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_log4js2.default.level = 'debug';
 var logger = _log4js2.default.getLogger();
 
 //////////////////////////////////////////////////////
@@ -26,20 +21,21 @@ var logger = _log4js2.default.getLogger();
 var CONFIGFILE = __dirname + '/../conf/config.yaml';
 var conf = _nodeYaml2.default.readSync(CONFIGFILE);
 
+var srcimg_url = process.env.SRCIMG_URL || conf.srcimg.url;
+var mqtt_host = process.env.MQTT_HOST || conf.mqtt.host;
+var mqtt_port = process.env.MQTT_PORT || conf.mqtt.port;
+var mqtt_topic = process.env.TOPIC || conf.mqtt.topic;
+var polling_interval = process.env.POLLING_INTERVAL || conf.polling.interval;
+
+var mqtt_url = 'mqtt://' + mqtt_host + ':' + mqtt_port;
+
 //////////////////////////////////////////////////////
 // start analyzer
 //
-var faceAnalyzer = new _opencvAnalyzer2.default();
-var fullbodyAnalyzer = new _opencvAnalyzer2.default();
+var detector = new _detector2.default({ srcimg_url: srcimg_url, mqtt_url: mqtt_url, mqtt_topic: mqtt_topic, polling_interval: polling_interval });
 
-var imageAnalyzer = new _imageAnalyzer2.default();
-
-faceAnalyzer.startAnalyzer(10000, "FACE_CASCADE").then(function () {
-  return fullbodyAnalyzer.startAnalyzer(10001, "FULLBODY_CASCADE");
-}).then(function () {
-  return imageAnalyzer.start(conf.plugins, conf.generator, conf.publisher, conf.interval);
-}).then(function () {
-  return logger.info('image analyzer started');
+detector.start().then(function () {
+  return logger.info('Motion Detector started');
 }).catch(function (err) {
   console.warn(err.message);
   process.exit();
