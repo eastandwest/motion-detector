@@ -22,6 +22,7 @@ class Detector {
   polling_interval: number
   motionDetection: Object
   intervalObj: null|number
+  uuid: string
 
   constructor({srcimg_url, mqtt_url, mqtt_topic, polling_interval} : {srcimg_url: string, mqtt_url: string, mqtt_topic: string, polling_interval: number}) {
     this.srcimg_url = srcimg_url
@@ -32,6 +33,7 @@ class Detector {
 
     this.motionDetection = new MotionDetection()
     this.intervalObj = null
+    this.uuid = 'NOTASSIGNED'
   }
 
   /**
@@ -40,17 +42,20 @@ class Detector {
    * This will poll image, detect motion, then publish result to mqtt broaker
    *
    * @method Detector#start
+   * @params {string} uuid - uuid of the ssg
    */
-  start(): Promise<void> {
+  start(uuid: string): Promise<void> {
     return new Promise((resolv, reject) => {
+      this.uuid = uuid
       this.mqtt = mqtt.connect(this.mqtt_url)
 
       this.mqtt.on('connect', () => {
+        logger.info(`uuid of SSG: ${this.uuid}`)
         logger.info(`connected to MQTT broaker : ${this.mqtt_url}`)
           this._startPolling()
             .then(() => {
               logger.info(`polling to ${this.srcimg_url} started every ${this.polling_interval} msec`)
-                resolv()
+              resolv()
             })
             .catch(err => logger.error(err.message))
       })
@@ -93,9 +98,11 @@ class Detector {
    */
   _startPolling(): Promise<void> {
     this.intervalObj = setInterval(ev => {
+      const timestamp = Date.now()
+
       this._fetchImg()
         .then( img => this._detectMotion(img))
-        .then( res => this._publishMqtt(res))
+        .then( res => this._publishMqtt(res, timestamp))
         .catch(err => logger.warn(err.message))
     }, this.polling_interval)
 
@@ -129,7 +136,7 @@ class Detector {
     return new Promise( (resolve, reject) => {
       this.motionDetection.detect(img)
         .then( res => {
-          const _res = Object.assign({}, {score: res.score, box: res.box})
+          const _res = Object.assign({}, {score: res.score, clusters: res.clusters})
           const now = Date.now()
           resolve(_res)
         })
@@ -143,9 +150,10 @@ class Detector {
    * @params {Object} obj - arbitrary result object
    * @returns {Promise<void>}
    */
-  _publishMqtt(obj: Object) {
+  _publishMqtt(obj: Object, timestamp: number):Promise<void> {
     return new Promise( (resolve, reject) => {
-      const mesg = JSON.stringify(obj)
+      const objMesg = Object.assign({}, obj, {timestamp, uuid: this.uuid})
+      const mesg = JSON.stringify(objMesg)
       if(this.mqtt) {
         this.mqtt.publish(this.mqtt_topic, mesg, err => {
           if(!err) resolve()

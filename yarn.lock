@@ -2668,6 +2668,12 @@ node-int64@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
 
+node-kmeans@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/node-kmeans/-/node-kmeans-1.1.0.tgz#fa250cb6f273bb42ac70df679f0d4512eab222f2"
+  dependencies:
+    underscore "1.4.2"
+
 node-notifier@^5.0.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/node-notifier/-/node-notifier-5.1.2.tgz#2fa9e12605fa10009d44549d6fcd8a63dde0e4ff"
@@ -3788,6 +3794,10 @@ underscore-contrib@~0.3.0:
   resolved "https://registry.yarnpkg.com/underscore-contrib/-/underscore-contrib-0.3.0.tgz#665b66c24783f8fa2b18c9f8cbb0e2c7d48c26c7"
   dependencies:
     underscore "1.6.0"
+
+underscore@1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.4.2.tgz#cb2aae6a7999a89fd55aaee75bce0311698cebfb"
 
 underscore@1.6.0, underscore@~1.6.0:
   version "1.6.0"

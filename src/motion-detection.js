@@ -4,6 +4,7 @@ import cv from 'opencv'
 import express from 'express'
 import path from 'path'
 import fs   from 'fs'
+import kmeans from 'node-kmeans'
 
 const app = express()
 
@@ -79,14 +80,49 @@ class MotionDetection {
 
             score = this._calcScore(th)
             contours = this._getContoursBoundaries(th)
-            box = this._calcBox(contours)
+            this._getContoursClusters(contours)
+              .then( clusters => resolv({ img: jpg, score, contours, clusters }) )
+              .catch(err => reject(err))
           }
           this.prev = mat
-
-          resolv({ img: jpg, score, contours, box})
         }
       })
     })
+  }
+
+  /**
+   * get contours clusters
+   *
+   * @params {Array<object>} contours - array of contour object
+   * @return {Object} - contours cluster object
+   */
+  _getContoursClusters(contours: Array<Object>):Promise<Object> {
+    return new Promise((resolve, reject) => {
+      if (contours.length === 0) {
+        resolve({})
+      } else {
+        //let _vectors = contours.map(c => [ c.x + (c.width / 2), c.y + (c.height / 2) ])
+        let _vectors = contours.map(c => [ c.x, c.y, c.width, c.height ])
+        const K_MAX = 3
+        const k = _vectors.length < K_MAX ? _vectors.length : K_MAX
+
+        try {
+          kmeans.clusterize(_vectors, {k}, (err, res) => {
+            if(err) reject(err)
+            else {
+              const _res = res.map( obj => obj.clusterInd )
+                .map( idxs => idxs.map( idx => contours[idx] ) )
+                .map( cnts => this._calcBox( cnts ) )
+
+              resolve(_res)
+            }
+          })
+        } catch(err) {
+          reject(err)
+        }
+      }
+    })
+
   }
 
   /**

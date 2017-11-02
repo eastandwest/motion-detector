@@ -22,6 +22,10 @@ var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
 
+var _nodeKmeans = require('node-kmeans');
+
+var _nodeKmeans2 = _interopRequireDefault(_nodeKmeans);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -69,11 +73,11 @@ var MotionDetection = function () {
    *
    * @params {Buffer} jpg - jpg image
    * @method MotionDetection#detect
-   * @returns {Promise<{img: Buffer, score: number, contours: Array<{x: number, y: number, width: number, height:number>|null}>}
+   * @returns {Promise<{img: Buffer, score: number, contours: Array<{x: number, y: number, width: number, height:number>|null}>, box: {x: number, y: number, width: number, height: number}>}
    *
    * @examples
    * md.detect(jpg).then(obj => {
-   *   // #=> {jpg: [jpg data], score: 12.4, contours: [{x: 12, y: 15, width: 45, height: 67}, ...] }
+   *   // #=> {jpg: [jpg data], score: 12.4, contours: [{x: 12, y: 15, width: 45, height: 67}, ...], box: {x: 10, y: 10, width: 20, height: 120} }
    * })
    */
 
@@ -89,7 +93,9 @@ var MotionDetection = function () {
             reject(err);
           } else {
             var _score = 0,
-                _contours = [];
+                _contours = [],
+                box = {},
+                clusters = [];
 
             // pre-processing
             // grayscale then blur to eliminate noise
@@ -105,13 +111,51 @@ var MotionDetection = function () {
 
               _score = _this._calcScore(th);
               _contours = _this._getContoursBoundaries(th);
+              clusters = _this._getContoursClusters(_contours);
+              box = _this._calcBox(_contours);
             }
             _this.prev = mat;
 
-            resolv({ img: jpg, score: _score, contours: _contours });
+            resolv({ img: jpg, score: _score, contours: _contours, box: box });
           }
         });
       });
+    }
+
+    /**
+     * get contours clousters
+     *
+     * @params {Array<object>} contours - array of contour object
+     * @return {Object} - contours cluster object
+     */
+
+  }, {
+    key: '_getContoursClusters',
+    value: function _getContoursClusters(contours) {
+      console.log(contours);
+    }
+
+    /**
+     * calucrate motion detection box
+     * @private
+     */
+
+  }, {
+    key: '_calcBox',
+    value: function _calcBox(contours) {
+      var x0 = -1,
+          y0 = -1,
+          x1 = -1,
+          y1 = -1;
+
+      contours.forEach(function (c) {
+        x0 = x0 === -1 || c.x < x0 ? c.x : x0;
+        y0 = y0 === -1 || c.y < y0 ? c.y : y0;
+        x1 = x1 === -1 || x1 < c.x + c.width ? c.x + c.width : x1;
+        y1 = y1 === -1 || y1 < c.y + c.height ? c.y + c.height : y1;
+      });
+
+      return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
     }
 
     /**

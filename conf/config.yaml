@@ -5,4 +5,5 @@ mqtt:
   port: 1883 # will be process.env.MQTT_PORT
   topic: motiondetection # will be process.env.MQTT_TOPIC
 polling:
-  interval: 100 # will be .... process.env.POLLING_INTERVAL
+  interval: 250 # will be .... process.env.POLLING_INTERVAL
+profile_url: http://localhost:5000/profile

@@ -181,8 +181,9 @@ var Detector = function () {
       var st = Date.now();
       return new Promise(function (resolve, reject) {
         _this5.motionDetection.detect(img).then(function (res) {
+          var _res = Object.assign({}, { score: res.score, box: res.box });
           var now = Date.now();
-          resolve(res);
+          resolve(_res);
         }).catch(function (err) {
           return reject(err);
         });
