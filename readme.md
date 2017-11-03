@@ -21,6 +21,17 @@ Those detection result will be stored to InfluxDB, munin or AmazonS3.
 sudo apt-get -y install libopencv-dev yasm
 ```
 
+## installation
+
+```
+yarn install
+sudo yarn link
+sudo yarn link motion-detector
+
+motion-detector
+```
+
+
 ## In and Out
 
 * Input
