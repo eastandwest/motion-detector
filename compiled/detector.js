@@ -51,6 +51,7 @@ var Detector = function () {
 
     this.motionDetection = new _motionDetection2.default();
     this.intervalObj = null;
+    this.uuid = 'NOTASSIGNED';
   }
 
   /**
@@ -59,18 +60,21 @@ var Detector = function () {
    * This will poll image, detect motion, then publish result to mqtt broaker
    *
    * @method Detector#start
+   * @params {string} uuid - uuid of the ssg
    */
 
 
   _createClass(Detector, [{
     key: 'start',
-    value: function start() {
+    value: function start(uuid) {
       var _this = this;
 
       return new Promise(function (resolv, reject) {
+        _this.uuid = uuid;
         _this.mqtt = mqtt.connect(_this.mqtt_url);
 
         _this.mqtt.on('connect', function () {
+          logger.info('uuid of SSG: ' + _this.uuid);
           logger.info('connected to MQTT broaker : ' + _this.mqtt_url);
           _this._startPolling().then(function () {
             logger.info('polling to ' + _this.srcimg_url + ' started every ' + _this.polling_interval + ' msec');
@@ -130,10 +134,12 @@ var Detector = function () {
       var _this3 = this;
 
       this.intervalObj = setInterval(function (ev) {
+        var timestamp = Date.now();
+
         _this3._fetchImg().then(function (img) {
           return _this3._detectMotion(img);
         }).then(function (res) {
-          return _this3._publishMqtt(res);
+          return _this3._publishMqtt(res, timestamp);
         }).catch(function (err) {
           return logger.warn(err.message);
         });
@@ -181,7 +187,7 @@ var Detector = function () {
       var st = Date.now();
       return new Promise(function (resolve, reject) {
         _this5.motionDetection.detect(img).then(function (res) {
-          var _res = Object.assign({}, { score: res.score, box: res.box });
+          var _res = Object.assign({}, { score: res.score, clusters: res.clusters });
           var now = Date.now();
           resolve(_res);
         }).catch(function (err) {
@@ -199,11 +205,12 @@ var Detector = function () {
 
   }, {
     key: '_publishMqtt',
-    value: function _publishMqtt(obj) {
+    value: function _publishMqtt(obj, timestamp) {
       var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        var mesg = JSON.stringify(obj);
+        var objMesg = Object.assign({}, obj, { timestamp: timestamp, uuid: _this6.uuid });
+        var mesg = JSON.stringify(objMesg);
         if (_this6.mqtt) {
           _this6.mqtt.publish(_this6.mqtt_topic, mesg, function (err) {
             if (!err) resolve();else reject(err);

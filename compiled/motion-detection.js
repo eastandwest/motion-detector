@@ -94,8 +94,7 @@ var MotionDetection = function () {
           } else {
             var _score = 0,
                 _contours = [],
-                box = {},
-                clusters = [];
+                box = {};
 
             // pre-processing
             // grayscale then blur to eliminate noise
@@ -111,19 +110,20 @@ var MotionDetection = function () {
 
               _score = _this._calcScore(th);
               _contours = _this._getContoursBoundaries(th);
-              clusters = _this._getContoursClusters(_contours);
-              box = _this._calcBox(_contours);
+              _this._getContoursClusters(_contours).then(function (clusters) {
+                return resolv({ img: jpg, score: _score, contours: _contours, clusters: clusters });
+              }).catch(function (err) {
+                return reject(err);
+              });
             }
             _this.prev = mat;
-
-            resolv({ img: jpg, score: _score, contours: _contours, box: box });
           }
         });
       });
     }
 
     /**
-     * get contours clousters
+     * get contours clusters
      *
      * @params {Array<object>} contours - array of contour object
      * @return {Object} - contours cluster object
@@ -132,7 +132,40 @@ var MotionDetection = function () {
   }, {
     key: '_getContoursClusters',
     value: function _getContoursClusters(contours) {
-      console.log(contours);
+      var _this2 = this;
+
+      return new Promise(function (resolve, reject) {
+        if (contours.length === 0) {
+          resolve({});
+        } else {
+          //let _vectors = contours.map(c => [ c.x + (c.width / 2), c.y + (c.height / 2) ])
+          var _vectors = contours.map(function (c) {
+            return [c.x, c.y, c.width, c.height];
+          });
+          var K_MAX = 3;
+          var k = _vectors.length < K_MAX ? _vectors.length : K_MAX;
+
+          try {
+            _nodeKmeans2.default.clusterize(_vectors, { k: k }, function (err, res) {
+              if (err) reject(err);else {
+                var _res = res.map(function (obj) {
+                  return obj.clusterInd;
+                }).map(function (idxs) {
+                  return idxs.map(function (idx) {
+                    return contours[idx];
+                  });
+                }).map(function (cnts) {
+                  return _this2._calcBox(cnts);
+                });
+
+                resolve(_res);
+              }
+            });
+          } catch (err) {
+            reject(err);
+          }
+        }
+      });
     }
 
     /**
@@ -249,13 +282,13 @@ var MotionDetection = function () {
   }, {
     key: '_startTestServer',
     value: function _startTestServer(port) {
-      var _this2 = this;
+      var _this3 = this;
 
       this.app.get('/', function (req, res) {
         return res.send('It works!!');
       });
       this.app.get('/:img', function (req, res) {
-        res.set('Content-Type', 'image/jpeg').send(_fs2.default.readFileSync(_this2.imgDir + "/" + req.params.img + ".jpg"));
+        res.set('Content-Type', 'image/jpeg').send(_fs2.default.readFileSync(_this3.imgDir + "/" + req.params.img + ".jpg"));
       });
 
       this.app.listen(port, function () {

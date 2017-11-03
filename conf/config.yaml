@@ -6,4 +6,4 @@ mqtt:
   topic: motiondetection # will be process.env.MQTT_TOPIC
 polling:
   interval: 250 # will be .... process.env.POLLING_INTERVAL
-profile_url: http://localhost:5000/profile
+profile_url: http://localhost:7050/profile
