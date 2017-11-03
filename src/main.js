@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import yaml   from 'node-yaml'
 import log4js from 'log4js'
 import fetch  from 'node-fetch'

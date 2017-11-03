@@ -2,7 +2,9 @@
   "name": "motion-detector",
   "version": "0.0.1",
   "description": "Motion detector for iFogCloud Project",
-  "main": "compiled/main.js",
+  "bin": {
+    "motion-detector": "compiled/main.js"
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
